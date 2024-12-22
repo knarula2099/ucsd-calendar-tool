@@ -85,11 +85,3 @@ def fetch_and_filter_classes(input_fields, base_url):
                      course_code} - {section_id}")
 
     return filtered_class_info
-
-# Helper function to format days
-
-
-def format_days(days_str: str) -> str:
-    """Convert abbreviated days to full day names and format them nicely"""
-    full_days = convert_days(days_str)
-    return " and ".join(full_days) if len(full_days) == 2 else ", ".join(full_days)

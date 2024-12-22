@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.page_utils import initialize_session_state, render_class_inputs, fetch_and_filter_classes, format_days
+from utils.page_utils import initialize_session_state, render_class_inputs, fetch_and_filter_classes
 from utils.calendar_utils import create_calendar, convert_days
 from datetime import datetime
 from dotenv import load_dotenv
@@ -164,6 +164,14 @@ with col3:
         st.session_state.input_fields = [(None, None)]
         st.session_state.classes = []
         st.rerun()
+
+
+# Helper function to format days
+def format_days(days_str: str) -> str:
+    """Convert abbreviated days to full day names and format them nicely"""
+    full_days = convert_days(days_str)
+    return " and ".join(full_days) if len(full_days) == 2 else ", ".join(full_days)
+
 
 # Display fetched classes
 if st.session_state.classes:
