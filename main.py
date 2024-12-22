@@ -56,6 +56,12 @@ st.markdown("""
         border-radius: 8px;
         margin-top: 1rem;
     }
+    
+    @media (max-width: 768px) {
+        .stColumn {
+            margin-bottom: 1rem !important;  /* Force override any existing margins */
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
