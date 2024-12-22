@@ -152,11 +152,12 @@ with col2:
         )
         if calendar_content:
             st.download_button(
-                label="Download Calendar",
+                label="🔽Download Calendar",
                 data=calendar_content,
                 file_name="class_schedule.ics",
                 mime="text/calendar",
-                key="download_calendar"
+                key="download_calendar",
+                use_container_width=True
             )
 
 with col3:

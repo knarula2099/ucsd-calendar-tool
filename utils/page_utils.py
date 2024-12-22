@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-from utils.calendar_utils import convert_days
 
 
 def initialize_session_state(key, default_value):
