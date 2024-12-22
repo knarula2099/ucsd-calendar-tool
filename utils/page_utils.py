@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from utils.calendar_utils import convert_days
 
 
 def initialize_session_state(key, default_value):
@@ -16,9 +17,9 @@ def render_class_inputs():
         cols = st.columns(2)
         updated_inputs.append((
             cols[0].text_input(f"Enter Course Code {
-                               i + 1}", value=course_code or "", key=f"course_{i}"),
+                               i + 1}", value=course_code or "", key=f"course_{i}", placeholder="eg. CSE 101, MATH 20C, Econ 138"),
             cols[1].text_input(f"Enter Section ID {
-                               i + 1}", value=section_id or "", key=f"section_{i}")
+                               i + 1}", value=section_id or "", key=f"section_{i}", placeholder="eg. A01, B02. Use Lecture ID if no discussion section.")
         ))
     return updated_inputs
 
@@ -84,3 +85,11 @@ def fetch_and_filter_classes(input_fields, base_url):
                      course_code} - {section_id}")
 
     return filtered_class_info
+
+# Helper function to format days
+
+
+def format_days(days_str: str) -> str:
+    """Convert abbreviated days to full day names and format them nicely"""
+    full_days = convert_days(days_str)
+    return " and ".join(full_days) if len(full_days) == 2 else ", ".join(full_days)
