@@ -22,7 +22,7 @@ st.markdown("""
         margin: 0 auto;
         padding: 2rem;
     }
-    
+
     /* Card styling */
     .stCard {
         padding: 1rem;
@@ -30,25 +30,25 @@ st.markdown("""
         background: white;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    
+
     /* Step boxes styling */
     .step-box {
         text-align: center;
         padding: 1rem;
         border-radius: 8px;
     }
-    
+
     .step-number {
         font-size: 1.5rem;
         font-weight: bold;
         margin-bottom: 0.5rem;
     }
-    
+
     /* Button styling */
     .stButton button {
         width: 100%;
     }
-    
+
     /* Help section styling */
     .help-section {
         background: #f8f9fa;
@@ -56,7 +56,7 @@ st.markdown("""
         border-radius: 8px;
         margin-top: 1rem;
     }
-    
+
     @media (max-width: 768px) {
         .stColumn {
             margin-bottom: 1rem !important;  /* Force override any existing margins */
@@ -109,13 +109,13 @@ with st.expander("Need Help?"):
     st.markdown("""
         ### 📝 Adding Classes
         Use the input fields to enter course codes and section numbers. Click "Add Class" for more fields or "Remove Class" to delete them.
-        
+
         ### 🔍 Fetching Information
         Click "Fetch Classes" to retrieve details. The information will appear below the input fields.
-        
+
         ### 📅 Calendar Generation
         After fetching classes, click "Generate Calendar" then "Download Calendar" to save your schedule.
-        
+
         ### 🔄 Starting Over
         Use "Clear All" to reset all fields and start fresh.
     """)
@@ -150,7 +150,7 @@ with col1:
         st.rerun()
 
 with col2:
-    if st.session_state.classes and st.button("📅Generate Calendar", use_container_width=True):
+    if st.session_state.classes and st.session_state.classes != -1 and st.button("📅Generate Calendar", use_container_width=True):
         calendar_content = create_calendar(
             st.session_state.classes,
             QUARTER_START.strftime('%Y-%m-%d'),
@@ -172,8 +172,9 @@ with col3:
         st.session_state.classes = []
         st.rerun()
 
-
 # Helper function to format days
+
+
 def format_days(days_str: str) -> str:
     """Convert abbreviated days to full day names and format them nicely"""
     full_days = convert_days(days_str)
@@ -182,19 +183,28 @@ def format_days(days_str: str) -> str:
 
 # Display fetched classes
 if st.session_state.classes:
-    st.subheader("Fetched Classes")
-    for class_code, info in st.session_state.classes.items():
-        with st.expander(f"📚 {class_code}"):
-            st.markdown("**Lecture:**")
-            st.write(f"Days: {format_days(info['lecture_info']['days'])}")
-            st.write(f"Time: {info['lecture_info']['time']}")
-            st.write(f"Location: {info['lecture_info']['location']}")
-
-            if "discussion_info" in info:
-                st.markdown("\n**Discussion:**")
-                st.write(f"Days: {format_days(
-                    info['discussion_info']['days'])}")
-                st.write(f"Time: {info['discussion_info']['time']}")
-                st.write(f"Location: {info['discussion_info']['location']}")
+    if st.session_state.classes == -1:
+        st.error("Please enter at least one class to fetch.")
+    else:
+        st.subheader("Fetched Classes")
+        for class_code, info in st.session_state.classes.items():
+            if info['lecture_info'] == -1:
+                st.error(
+                    f"Error fetching data for {class_code}. Please check the course code and section ID.")
             else:
-                st.write("No discussion section available.")
+                with st.expander(f"📚 {class_code}"):
+                    st.markdown("**Lecture:**")
+                    st.write(f"Days: {format_days(
+                        info['lecture_info']['days'])}")
+                    st.write(f"Time: {info['lecture_info']['time']}")
+                    st.write(f"Location: {info['lecture_info']['location']}")
+
+                    if "discussion_info" in info:
+                        st.markdown("\n**Discussion:**")
+                        st.write(f"Days: {format_days(
+                            info['discussion_info']['days'])}")
+                        st.write(f"Time: {info['discussion_info']['time']}")
+                        st.write(f"Location: {
+                            info['discussion_info']['location']}")
+                    else:
+                        st.write("No discussion section available.")

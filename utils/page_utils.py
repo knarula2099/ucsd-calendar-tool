@@ -41,9 +41,7 @@ def fetch_and_filter_classes(input_fields, base_url):
     ]
 
     if not valid_classes:
-        st.error(
-            "No valid classes entered. Please add valid Course Code and Section ID.")
-        return {}
+        return -1
 
     filtered_class_info = {}
 
@@ -80,7 +78,8 @@ def fetch_and_filter_classes(input_fields, base_url):
                 st.warning(f"Lecture or discussion info not found for {
                            course_code} - {section_id}.")
         else:
-            st.error(f"Failed to fetch details for {
-                     course_code} - {section_id}")
+            filtered_class_info[f'{course_code}_{section_id}'] = {
+                "lecture_info": -1
+            }
 
     return filtered_class_info
