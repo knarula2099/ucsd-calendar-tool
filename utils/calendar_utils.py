@@ -1,5 +1,3 @@
-# utils/calendar_utils.py
-
 from datetime import datetime, timedelta
 from typing import List, Dict
 from uuid import uuid4
@@ -38,6 +36,28 @@ def convert_days(day_string: str) -> List[str]:
     return full_days
 
 
+def get_rrule_days(days: List[str]) -> str:
+    """
+    Convert full day names to RRULE day format.
+
+    Args:
+        days (List[str]): List of full day names
+
+    Returns:
+        str: RRULE-formatted day string
+    """
+    rrule_mapping = {
+        'Monday': 'MO',
+        'Tuesday': 'TU',
+        'Wednesday': 'WE',
+        'Thursday': 'TH',
+        'Friday': 'FR',
+        'Saturday': 'SA',
+        'Sunday': 'SU'
+    }
+    return ','.join(rrule_mapping[day] for day in days)
+
+
 def create_class_events(
     class_data: Dict,
     term_start: str,
@@ -52,16 +72,11 @@ def create_class_events(
         term_end (str): End date in 'YYYY-MM-DD' format
 
     Returns:
-        List[Dict]: List of all events for all classes
+        List[Dict]: List of recurring events for all classes
     """
     all_events = []
     start_date = datetime.strptime(term_start, '%Y-%m-%d')
     end_date = datetime.strptime(term_end, '%Y-%m-%d')
-
-    weekday_mapping = {
-        'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
-        'Friday': 4, 'Saturday': 5, 'Sunday': 6
-    }
 
     # Process each class
     for class_code, sessions in class_data.items():
@@ -70,33 +85,41 @@ def create_class_events(
             if session_type in sessions:
                 session = sessions[session_type]
                 class_days = convert_days(session['days'])
-                class_weekdays = [weekday_mapping[day] for day in class_days]
+                rrule_days = get_rrule_days(class_days)
+
+                # Find first occurrence of the class
+                first_date = start_date
+                while first_date <= end_date:
+                    if first_date.strftime('%A') in class_days:
+                        break
+                    first_date += timedelta(days=1)
 
                 start_time = datetime.strptime(
                     session['startTime'], '%H:%M').time()
                 end_time = datetime.strptime(
                     session['endTime'], '%H:%M').time()
 
-                current_date = start_date
-                while current_date <= end_date:
-                    if current_date.weekday() in class_weekdays:
-                        event = {
-                            'title': f"{class_code} {session_type.split('_')[0].title()}",
-                            'date': current_date.strftime('%Y-%m-%d'),
-                            'start_time': start_time.strftime('%H:%M'),
-                            'end_time': end_time.strftime('%H:%M'),
-                            'location': session['location'],
-                            'section': session['section']
-                        }
-                        all_events.append(event)
-                    current_date += timedelta(days=1)
+                event = {
+                    'title': f"{class_code} {session_type.split('_')[0].title()}",
+                    'date': first_date.strftime('%Y-%m-%d'),
+                    'start_time': start_time.strftime('%H:%M'),
+                    'end_time': end_time.strftime('%H:%M'),
+                    'location': session['location'],
+                    'section': session['section'],
+                    'rrule': {
+                        'freq': 'WEEKLY',
+                        'until': end_date.strftime('%Y%m%d'),
+                        'byday': rrule_days
+                    }
+                }
+                all_events.append(event)
 
     return all_events
 
 
 def generate_ics_content(events: List[Dict]) -> str:
     """
-    Generate ICS file content from events.
+    Generate ICS file content from events with recurring rules.
 
     Args:
         events (List[Dict]): List of event dictionaries
@@ -116,12 +139,17 @@ def generate_ics_content(events: List[Dict]) -> str:
         start_datetime = f"{event['date']}T{event['start_time']}:00"
         end_datetime = f"{event['date']}T{event['end_time']}:00"
 
+        rrule = event['rrule']
+        rrule_str = f"FREQ={rrule['freq']};UNTIL={
+            rrule['until']}T235959Z;BYDAY={rrule['byday']}"
+
         ics_content.extend([
             "BEGIN:VEVENT",
             f"UID:{uuid4()}",
             f"DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}",
             f"DTSTART:{start_datetime.replace('-', '').replace(':', '')}",
             f"DTEND:{end_datetime.replace('-', '').replace(':', '')}",
+            f"RRULE:{rrule_str}",
             f"SUMMARY:{event['title']}",
             f"LOCATION:{event['location']}",
             f"DESCRIPTION:Section {event['section']}",
